@@ -1,8 +1,11 @@
 from random import randint
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView
+from django.contrib.auth import login, logout
+from django.contrib import messages
 
 from .models import Category, Product
+from .forms import LoginForm, RegistrationForm
 
 # Create your views here.
 
@@ -69,16 +72,6 @@ class ProductPage(DetailView):
         context = super().get_context_data(**kwargs)
         product = Product.objects.get(slug=self.kwargs["slug"])
         context["title"] = product
-        # products = Product.objects.filter(category=product.category)
-
-        # data = []
-        # for _ in range(5):
-        #     random_index = randint(0, len(products) - 1)
-        #     random_product = products[random_index]
-        #     if random_product not in data and str(random_product) != product.title:
-        #         data.append(random_product)
-
-        # context['products'] = data
         data = (
             Product.objects.all()
             .exclude(slug=self.kwargs["slug"])
@@ -87,3 +80,44 @@ class ProductPage(DetailView):
         context["products"] = data
 
         return context
+
+
+def login_registration(request):
+    context = {
+        "title": "Войти или зарегистрироваться",
+        "login_form": LoginForm,
+        "registration_form": RegistrationForm,
+    }
+
+    return render(request, "shop/login_registration.html", context)
+
+
+def user_login(request):
+    form = LoginForm(data=request.POST)
+    if form.is_valid():
+        user = form.get_user()
+        login(request, user)
+
+        return redirect('index')
+    else:
+        messages.error(request, 'Неверное имя или пароль')
+
+        return redirect('login_registration')
+
+def registration(request):
+    form = RegistrationForm(data=request.POST)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Аккаунт успешно создан")
+    else:
+        # messages.error(request, 'Что-то пошло не так')
+        for error in form.errors:
+            messages.error(request, form.errors[error].as_text())
+
+    return redirect('login_registration')
+    
+
+def user_logout(requset):
+    logout(requset)
+
+    return redirect("index")
