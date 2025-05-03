@@ -20,14 +20,21 @@ class Category(models.Model):
         related_name="subcategories",
     )
 
-    def get_absolute_url(self):
-        pass
-
     def __str__(self):
         return self.title
 
     def __repr__(self):
         return f"Категория: pk={self.pk}, title={self.title}"
+
+    def get_parent_category_photo(self):
+        """Для получения картинки родительской категории"""
+        if self.image:
+            return self.image.url
+        else:
+            return "https://pubshamrock.com/wp-content/uploads/2023/04/skoro-zdes-budet-foto.jpg"
+
+    def get_absolute_url(self):
+        return reverse("category_detail", kwargs={"slug": self.slug})
 
     class Meta:
         verbose_name = "Категория"
@@ -58,26 +65,36 @@ class Product(models.Model):
     )
     slug = models.SlugField(unique=True, null=True)
     size = models.PositiveIntegerField(default=30, verbose_name="Размер в мм")
-    color = models.CharField(max_length=30, default='Серебро', verbose_name='Цвет/Материал')
+    color = models.CharField(
+        max_length=30, default="Серебро", verbose_name="Цвет/Материал"
+    )
 
     def get_absolute_url(self):
-        pass
+        return reverse('product_page', kwargs={'slug': self.slug})
+
+    def get_first_photo(self):
+        if self.images.first():
+            return self.images.first().image.url
+        else:
+            return 'https://pubshamrock.com/wp-content/uploads/2023/04/skoro-zdes-budet-foto.jpg'
 
     def __str__(self):
         return self.title
-    
+
     def __repr__(self):
-        return f'Товар: pk={self.pk}, title={self.title}, price={self.price}'
-    
+        return f"Товар: pk={self.pk}, title={self.title}, price={self.price}"
+
     class Meta:
-        verbose_name = 'Товар'
-        verbose_name_plural = 'Товары'
+        verbose_name = "Товар"
+        verbose_name_plural = "Товары"
 
 
 class Galery(models.Model):
-    image = models.ImageField(upload_to='products/', verbose_name='Изображение')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to="products/", verbose_name="Изображение")
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="images"
+    )
 
     class Meta:
-        verbose_name = 'Изображение'
-        verbose_name_plural = 'Галерея товаров'
+        verbose_name = "Изображение"
+        verbose_name_plural = "Галерея товаров"

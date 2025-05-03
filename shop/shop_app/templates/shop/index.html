@@ -8,7 +8,17 @@
 <main>
     <!--  Modal -->
     {% include 'components/_model.html' %}
-    <!-- HERO SECTION-->
-    {% include 'components/_hero.html' %}
+    <div class="container">
+        <!-- Баннер на главной странице -->
+        {% include 'shop/components/_banner.html' %}
+        <!-- CATEGORIES SECTION-->
+        {% include 'shop/components/_categories.html' %}
+        <!-- TRENDING PRODUCTS-->
+        {% include 'shop/components/_trending.html' %}
+        <!-- SERVICES-->
+        {% include 'shop/components/_services.html' %}
+        <!-- NEWSLETTER-->
+        {% include 'shop/components/_newsletter.html' %}
+    </div>
 </main>
 {% endblock main %}
