@@ -4,6 +4,14 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 
+CHOICES = (
+    ("5", "Отлично"),
+    ("4", "Хорошо"),
+    ("3", "Нормально"),
+    ("2", "Плохо"),
+    ("1", "Ужасно"),
+)
+
 
 class Category(models.Model):
     title = models.CharField(max_length=155, verbose_name="Наименование категории")
@@ -70,13 +78,13 @@ class Product(models.Model):
     )
 
     def get_absolute_url(self):
-        return reverse('product_page', kwargs={'slug': self.slug})
+        return reverse("product_page", kwargs={"slug": self.slug})
 
     def get_first_photo(self):
         if self.images.first():
             return self.images.first().image.url
         else:
-            return 'https://pubshamrock.com/wp-content/uploads/2023/04/skoro-zdes-budet-foto.jpg'
+            return "https://pubshamrock.com/wp-content/uploads/2023/04/skoro-zdes-budet-foto.jpg"
 
     def __str__(self):
         return self.title
@@ -98,3 +106,36 @@ class Galery(models.Model):
     class Meta:
         verbose_name = "Изображение"
         verbose_name_plural = "Галерея товаров"
+
+
+class Review(models.Model):
+    """Модель для отзывов"""
+
+    text = models.TextField(verbose_name="Текст комментария")
+    grade = models.CharField(max_length=20, choices=CHOICES, blank=True, null=True, verbose_name='Оценка')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Автор")
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, verbose_name="Продукт"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время")
+
+    def __str__(self):
+        return self.author.username
+
+    class Meta:
+        verbose_name = "Отзыв"
+        verbose_name_plural = "Отзывы"
+
+
+class FavoriteProducts(models.Model):
+    """Избранные товары"""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='Товар')
+
+    def __str__(self):
+        return self.product.title
+    
+    class Meta:
+        verbose_name = 'Избранный товар'
+        verbose_name_plural = 'Избранные товары'

@@ -1,11 +1,10 @@
-from random import randint
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView
 from django.contrib.auth import login, logout
 from django.contrib import messages
 
-from .models import Category, Product
-from .forms import LoginForm, RegistrationForm
+from .models import Category, Product, Review, FavoriteProducts
+from .forms import LoginForm, RegistrationForm, ReviewForm
 
 # Create your views here.
 
@@ -78,6 +77,11 @@ class ProductPage(DetailView):
             .filter(category=product.category)[:5]
         )
         context["products"] = data
+        context['reviews'] = Review.objects.filter(product=product).order_by('-pk')
+
+        if self.request.user.is_authenticated:
+            context["review_form"] = ReviewForm
+
 
         return context
 
@@ -98,11 +102,12 @@ def user_login(request):
         user = form.get_user()
         login(request, user)
 
-        return redirect('index')
+        return redirect("index")
     else:
-        messages.error(request, 'Неверное имя или пароль')
+        messages.error(request, "Неверное имя или пароль")
 
-        return redirect('login_registration')
+        return redirect("login_registration")
+
 
 def registration(request):
     form = RegistrationForm(data=request.POST)
@@ -114,10 +119,40 @@ def registration(request):
         for error in form.errors:
             messages.error(request, form.errors[error].as_text())
 
-    return redirect('login_registration')
-    
+    return redirect("login_registration")
+
 
 def user_logout(requset):
     logout(requset)
 
     return redirect("index")
+
+
+def save_review(request, product_pk):
+    """Сохранение отзыва"""
+    form = ReviewForm(data=request.POST)
+    if form.is_valid():
+        review = form.save(commit=False)
+        review.author = request.user
+        product = Product.objects.get(pk=product_pk)
+        review.product = product
+        review.save()
+
+        return redirect("product_page", product.slug)
+
+
+def save_favorite_product(requset, product_slug):
+    """Добавление или удаление избранных товаров"""
+    user = requset.user if requset.user.is_authenticated else None
+    product = Product.objects.get(slug=product_slug)
+    favorite_products = FavoriteProducts.objects.filter(user=user)
+    if user:
+        if product in [i.product for i in favorite_products]:
+            fav_product = FavoriteProducts.objects.get(user=user, product=product)
+            fav_product.delete()
+        else:
+            FavoriteProducts.objects.create(user=user, product=product)
+
+        next_page = requset.META.get('HTTP_REFERER', 'category_detail')
+
+        return redirect(next_page)
