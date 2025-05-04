@@ -2,8 +2,10 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView
 from django.contrib.auth import login, logout
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.utils import IntegrityError
 
-from .models import Category, Product, Review, FavoriteProducts
+from .models import Category, Product, Review, FavoriteProducts, Mail
 from .forms import LoginForm, RegistrationForm, ReviewForm
 
 # Create your views here.
@@ -77,11 +79,10 @@ class ProductPage(DetailView):
             .filter(category=product.category)[:5]
         )
         context["products"] = data
-        context['reviews'] = Review.objects.filter(product=product).order_by('-pk')
+        context["reviews"] = Review.objects.filter(product=product).order_by("-pk")
 
         if self.request.user.is_authenticated:
             context["review_form"] = ReviewForm
-
 
         return context
 
@@ -153,6 +154,57 @@ def save_favorite_product(requset, product_slug):
         else:
             FavoriteProducts.objects.create(user=user, product=product)
 
-        next_page = requset.META.get('HTTP_REFERER', 'category_detail')
+        next_page = requset.META.get("HTTP_REFERER", "category_detail")
 
         return redirect(next_page)
+
+
+class FavoriteProductsView(ListView, LoginRequiredMixin):
+    """Вывод избранных товаров"""
+
+    model = FavoriteProducts
+    context_object_name = "products"
+    template_name = "shop/favorite_product.html"
+    login_url = "user_registration"
+
+    def get_queryset(self):
+        """Получение товара конкретного пользователя"""
+        favs = FavoriteProducts.objects.filter(user=self.request.user)
+        products = [i.product for i in favs]
+
+        return products
+
+
+def save_subscribers(request):
+    """Почтовые адресса"""
+    email = request.POST.get("email")
+    user = request.user if request.user.is_authenticated else None
+    if email:
+        try:
+            Mail.objects.create(mail=email, user=user)
+            messages.success(request, "Вы успешно подписались!")
+        except IntegrityError:
+            messages.error(request, "Вы уже подписаны")
+        return redirect("index")
+
+
+def send_email_to_subscribers(request):
+    from shop import settings
+
+    from django.core.mail import send_mail
+
+    if request.method == "POST":
+        text = request.POST.get("text")
+        mail_lists = Mail.objects.all()
+        for email in mail_lists:
+            send_mail(
+                subject="У нас новая акция",
+                message=text,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[email],
+                fail_silently=False,
+            )
+
+    context = {'title': 'Отправка расслыки'}
+
+    return render(request, 'shop/send_email.html', context)

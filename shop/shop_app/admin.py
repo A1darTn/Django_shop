@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
-from .models import Product, Category, Galery, Review, FavoriteProducts
+from .models import Product, Category, Galery, Review, FavoriteProducts, Mail
 
 
 # Register your models here.
@@ -62,3 +62,8 @@ admin.site.register(FavoriteProducts)
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ("pk", "author", "created_at")
     readonly_fields = ("author", "text", "created_at")
+
+@admin.register(Mail)
+class MailAdmin(admin.ModelAdmin):
+    list_display = ("pk", "user", "mail")
+    readonly_fields = ("user", "mail")
