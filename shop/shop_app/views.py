@@ -6,7 +6,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.utils import IntegrityError
 
 from .models import Category, Product, Review, FavoriteProducts, Mail
-from .forms import LoginForm, RegistrationForm, ReviewForm
+from .forms import LoginForm, RegistrationForm, ReviewForm, ShippingForm, CustomerForm
+from .utils import CartForAuthenticatedUser, get_cart_data
 
 # Create your views here.
 
@@ -205,6 +206,51 @@ def send_email_to_subscribers(request):
                 fail_silently=False,
             )
 
-    context = {'title': 'Отправка расслыки'}
+    context = {"title": "Отправка расслыки"}
 
-    return render(request, 'shop/send_email.html', context)
+    return render(request, "shop/send_email.html", context)
+
+
+def cart(request):
+    """Страничка корзины"""
+
+    cart_info = get_cart_data(request)
+    context = {
+        "title": "Корзинка",
+        "order": cart_info["order"],
+        "order_products": cart_info["order_products"],
+        "cart_total_quantity": cart_info["cart_total_quantity"],
+    }
+
+    return render(request, "shop/cart.html", context)
+
+
+def to_cart(request, product_id, action):
+    """Добавлять товар в корзину"""
+    try:
+        if request.user.is_authenticated:
+            CartForAuthenticatedUser(request, product_id, action)
+            return redirect("cart")
+        else:
+            messages.error(
+                request,
+                "Авторизируйтесь или зарегистрируйтесь, чтобы совершать покупки",
+            )
+            return redirect("login_registration")
+    except:
+        messages.error(request, "Товар отсутвует на складе")
+        return redirect("index")
+
+
+def checkout(request):
+    cart_info = get_cart_data(request)
+    context = {
+        "title": "Оформление заказа",
+        "order": cart_info["order"],
+        "order_products": cart_info["order_products"],
+        "cart_total_quantity": cart_info["cart_total_quantity"],
+        'customer_form': CustomerForm(),
+        'shipping_form': ShippingForm(),
+    }
+
+    return render(request, 'shop/checkout.html', context)

@@ -13,5 +13,8 @@ urlpatterns = [
     path('add_favorite/<slug:product_slug>/', save_favorite_product, name='add_favorite'),
     path('user_favorite/', FavoriteProductsView.as_view(), name='favorite_product_page'),
     path('save_email/', save_subscribers, name='save_subscribers'),
-    path('send_email/', send_email_to_subscribers, name='send_email')
+    path('send_email/', send_email_to_subscribers, name='send_email'),
+    path('to_cart/<int:product_id>/<str:action>/', to_cart, name='to_cart'),
+    path('cart/', cart, name='cart'),
+    path('checkout/', checkout, name='checkout')
 ]

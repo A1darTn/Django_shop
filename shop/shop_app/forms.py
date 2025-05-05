@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Review
+from .models import Customer, Review, ShippingAddres
 
 
 class LoginForm(AuthenticationForm):
@@ -61,5 +61,49 @@ class ReviewForm(forms.ModelForm):
             ),
             "grade": forms.Select(
                 attrs={"class": "form-control", "placeholder": "Ваша оценка..."}
+            ),
+        }
+
+
+class CustomerForm(forms.ModelForm):
+    """Контктная информация"""
+
+    class Meta:
+        model = Customer
+        fields = ("first_name", "last_name", "email", "phone")
+        widgets = {
+            "first_name": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Ваше имя"}
+            ),
+            "last_name": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Ваше фамилия"}
+            ),
+            "email": forms.EmailInput(
+                attrs={"class": "form-control", "placeholder": "Ваша почта"}
+            ),
+            "phone": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Ваше номер телефона"}
+            ),
+        }
+
+
+class ShippingForm(forms.ModelForm):
+    """Адрес доставки"""
+
+    class Meta:
+        model = ShippingAddres
+        fields = ("city", "state", "street")
+        widgets = {
+            "city": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Ваш город"}
+            ),
+            "state": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Ваша улица"}
+            ),
+            "street": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Ваша улица, дом, квартира",
+                }
             ),
         }

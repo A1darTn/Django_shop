@@ -48,3 +48,10 @@ def get_favorite_products(user):
     products = [i.product for i in fav]
 
     return products
+
+@register.simple_tag()
+def get_count_favorite_products(user):
+    fav = FavoriteProducts.objects.filter(user=user)
+    count_products = len([i.product for i in fav])
+
+    return count_products

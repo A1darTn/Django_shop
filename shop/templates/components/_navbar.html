@@ -1,3 +1,6 @@
+{% load shop_tags %}
+
+
 <header class="header bg-white">
   <div class="container px-lg-3">
     <nav class="navbar navbar-expand-lg navbar-light py-3 px-lg-0"><a class="navbar-brand" href="index.html"><span
@@ -12,15 +15,19 @@
           </li>
         </ul>
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="cart.html"> <i
-                class="fas fa-dolly-flatbed me-1 text-gray"></i>Cart<small class="text-gray fw-normal">(2)</small></a>
+          <li class="nav-item"><a class="nav-link" href="{% url 'cart' %}"> <i
+                class="fas fa-dolly-flatbed me-1 text-gray"></i>Корзинка<small class="text-gray fw-normal"></small></a>
           </li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'favorite_product_page' %}"> <i class="far fa-heart me-1"></i><small
-                class="text-gray fw-normal"> (0)</small></a></li>
+
+
           {% if request.user.is_authenticated %}
+          {% get_count_favorite_products request.user as count %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'favorite_product_page' %}"> <i class="far fa-heart me-1"></i><small
+                class="text-gray fw-normal">({{ count }})</small></a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}"> <i
                 class="fas fa-user me-1 text-gray fw-normal"></i>Выйти</a></li>
           {% else %}
+
           <li class="nav-item"><a class="nav-link" href="{% url 'login_registration' %}"> <i
                 class="fas fa-user me-1 text-gray fw-normal"></i>Войти/Зарегистрироваться</a></li>
           {% endif %}
